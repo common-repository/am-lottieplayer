@@ -1,6 +1,8 @@
 <?php
 namespace AAMD_Lottie;
 
+use function AAMD_Lottie\Utility\get_asset;
+
 \defined( 'ABSPATH' ) || exit;
 
 class Media {
@@ -9,14 +11,13 @@ class Media {
 	 * Constructor
 	 *
 	 * @param   void
-	 * @return  void
 	 */
 	public function __construct() {
 		if ( is_admin() ) {
 			add_action( 'wp_enqueue_media', array( $this, 'override_media_templates' ) );
 
 			add_filter( 'upload_mimes', array( $this, 'mimetypes' ) );
-			add_filter( 'wp_check_filetype_and_ext', array( $this, '_lottie_filetypes' ), 10, 5 );
+			add_filter( 'wp_check_filetype_and_ext', array( $this, 'lottie_filetypes' ), 10, 5 );
 			add_filter( 'wp_mime_type_icon', array( $this, 'icon_filter' ), 10, 3 );
 		}
 
@@ -36,7 +37,11 @@ class Media {
 	// Adding preview for Media Library
 	public function override_media_templates() {
 		if ( ! remove_action( 'admin_footer', 'wp_print_media_templates' ) ) {
-			\error_log( 'remove_action fail' );
+			throw new \WP_Error(
+				'remove_action_failed',
+				esc_html__( 'Could not remove admin footer.', 'am-lottieplayer' ),
+				array( 'status' => 400 ),
+			);
 		}
 		add_action( 'admin_footer', array( $this, 'print_media_templates' ) );
 	}
@@ -68,7 +73,7 @@ class Media {
 		);
 	}
 
-	private function _lottie_filetypes( $data, $file, $filename, $mimes, $real_mime ) {
+	public function lottie_filetypes( $data, $file, $filename, $mimes, $real_mime ) {
 		if ( ! empty( $data['ext'] ) && ! empty( $data['type'] ) ) {
 			return $data;
 		}
@@ -98,7 +103,14 @@ class Media {
 	 * @return int|string|WP_Error
 	 */
 	private static function _media_sideload_lottie( $file, $post_id = 0, $desc = 'AM Lottie Animation', $return_type = 'id' ) {
-		if ( ! empty( $file ) ) {
+		try {
+			if ( empty( $file ) ) {
+				throw new \WP_Error(
+					'image_sideload_failed',
+					__( 'Invalid Lottie URL.', 'am-lottieplayer' ),
+					array( 'status' => 400 ),
+				);
+			}
 
 			$allowed_extensions = array( 'lottie', 'json' );
 
@@ -109,7 +121,11 @@ class Media {
 			\preg_match( '/[^\?]+\.(' . \implode( '|', $allowed_extensions ) . ')\b/i', $file, $matches );
 
 			if ( ! $matches ) {
-				return new \WP_Error( 'image_sideload_failed', __( 'Invalid Lottie URL.' ) );
+				throw new \WP_Error(
+					'image_sideload_failed',
+					__( 'Invalid Lottie URL.', 'am-lottieplayer' ),
+					array( 'status' => 400 ),
+				);
 			}
 
 			$file_array         = array();
@@ -141,10 +157,11 @@ class Media {
 			}
 
 			$src = wp_get_attachment_url( $id );
-		}
 
-		// Finally, check to make sure the file has been saved, then return the HTML.
-		if ( ! empty( $src ) ) {
+			// Finally, check to make sure the file has been saved, then return the HTML.
+			if ( empty( $src ) ) {
+				throw new \WP_Error( 'image_sideload_failed' );
+			}
 			if ( 'src' === $return_type ) {
 				return $src;
 			}
@@ -153,15 +170,15 @@ class Media {
 			$html = '<img src="' . esc_url( $src ) . '" alt="' . esc_attr( $alt ) . '" />';
 
 			return $html;
-		} else {
-			return new \WP_Error( 'image_sideload_failed' );
+		} catch ( \Exception $e ) {
+			return $e;
 		}
 	}
 
 	// Adding icon to Lottie filetype
 	public function icon_filter( $icon, $mime ) {
 		if ( $mime === 'application/zip' || $mime === 'application/json' || $mime === 'text/plain' ) {
-			return AAMD_LOTTIE_URL . 'assets/lottie-icon.svg';
+			return get_asset( 'lottie-icon.svg' );
 		}
 		return $icon;
 	}
@@ -172,7 +189,7 @@ class Media {
 	 * @param boolean $default
 	 */
 	private static function _lottie_asset( $default = false ) {
-		$url = AAMD_LOTTIE_URL . 'assets/am.lottie';
+		$url = get_asset( 'am.lottie' );
 		if ( $default && filter_var( $url, FILTER_VALIDATE_URL ) ) {
 			return $url;
 		}

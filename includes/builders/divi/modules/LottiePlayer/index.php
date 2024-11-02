@@ -3,6 +3,7 @@ namespace AAMD_Lottie;
 
 \defined( 'ABSPATH' ) || exit;
 
+use function AAMD_Lottie\Utility\get_asset;
 use function AAMD_Lottie\Utility\render_lottieplayer;
 
 if ( \class_exists( '\ET_Builder_Module' ) ) {
@@ -14,19 +15,19 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 			$this->plural     = esc_html__( 'AM Lotties', 'am-lottieplayer' );
 			$this->slug       = 'et_pb_lottieplayer';
 			$this->vb_support = 'on';
-			$this->icon_path  = AAMD_LOTTIE_PATH . 'assets/divi-icon.svg';
+			$this->icon_path  = get_asset( 'divi-icon.svg' );
 
 			$this->settings_modal_toggles = array(
 				'general'    => array(
 					'toggles' => array(
-						'main_content' => esc_html__( 'Animation', 'et_builder' ),
+						'main_content' => esc_html__( 'Animation', 'am-lottieplayer' ),
 						'link'         => et_builder_i18n( 'Link' ),
 					),
 				),
 				'advanced'   => array(
 					'toggles' => array(
 						'overlay'   => et_builder_i18n( 'Overlay' ),
-						'alignment' => esc_html__( 'Alignment', 'et_builder' ),
+						'alignment' => esc_html__( 'Alignment', 'am-lottieplayer' ),
 						'width'     => array(
 							'title'    => et_builder_i18n( 'Sizing' ),
 							'priority' => 65,
@@ -36,11 +37,11 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 				'custom_css' => array(
 					'toggles' => array(
 						'animation'  => array(
-							'title'    => esc_html__( 'Animation', 'et_builder' ),
+							'title'    => esc_html__( 'Animation', 'am-lottieplayer' ),
 							'priority' => 90,
 						),
 						'attributes' => array(
-							'title'    => esc_html__( 'Attributes', 'et_builder' ),
+							'title'    => esc_html__( 'Attributes', 'am-lottieplayer' ),
 							'priority' => 95,
 						),
 					),
@@ -95,7 +96,8 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 
 		public function get_fields() {
 			global $aamd_lottie_media;
-			$proLink = esc_html__( 'This feature will only work in the premium version.', 'am-lottieplayer' ) . ' <a href="' . esc_url( 'https://www.aarstein.media/en/am-lottieplayer/pro', 'am-lottieplayer' ) . '" target="_blank" rel="noreferrer">' . esc_html__( 'Read about additional features in AM LottiePlayer PRO', 'am-lottieplayer' ) . '<span class="dashicons dashicons-external" style="font-size: 1em;"></span></a>';
+			global $pro_link;
+			global $pro_feature;
 
 			$fields = array(
 				'src'               => array(
@@ -139,13 +141,13 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 					'type'             => 'select',
 					'option_category'  => 'configuration',
 					'options'          => array(
-						'off' => esc_html__( 'In The Same Window', 'et_builder' ),
-						'on'  => esc_html__( 'In The New Tab', 'et_builder' ),
+						'off' => esc_html__( 'In The Same Window', 'am-lottieplayer' ),
+						'on'  => esc_html__( 'In The New Tab', 'am-lottieplayer' ),
 					),
 					'default_on_front' => 'off',
 					'depends_show_if'  => 'off',
 					'toggle_slug'      => 'link',
-					'description'      => esc_html__( 'Here you can choose whether or not your link opens in a new window', 'et_builder' ),
+					'description'      => esc_html__( 'Here you can choose whether or not your link opens in a new window', 'am-lottieplayer' ),
 				),
 				'show_bottom_space' => array(
 					'label'            => esc_html__( 'Show Space Below The Animation', 'am-lottieplayer' ),
@@ -162,7 +164,7 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 					'mobile_options'   => true,
 				),
 				'force_fullwidth'   => array(
-					'label'            => esc_html__( 'Force Fullwidth', 'et_builder' ),
+					'label'            => esc_html__( 'Force Fullwidth', 'am-lottieplayer' ),
 					'description'      => esc_html__( "When enabled, this will force your animation to extend 100% of the width of the column it's in.", 'am-lottieplayer' ),
 					'type'             => 'yes_no_button',
 					'option_category'  => 'layout',
@@ -201,6 +203,9 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 					),
 					'default_on_front' => 'off',
 					'toggle_slug'      => 'main_content',
+					'condition'        => array(
+						'animate_on_scroll' => 'off',
+					),
 				),
 				'loop'              => array(
 					'label'            => esc_html__( 'Loop', 'am-lottieplayer' ),
@@ -213,11 +218,14 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 					),
 					'default_on_front' => 'off',
 					'toggle_slug'      => 'main_content',
+					'condition'        => array(
+						'animate_on_scroll' => 'off',
+					),
 				),
 				'mode'              => array(
-					'label'            => 'Pro Feature: ' . esc_html__( 'Boomerang', 'am-lottieplayer' ),
+					'label'            => $pro_feature . esc_html__( 'Boomerang', 'am-lottieplayer' ),
 					'type'             => 'yes_no_button',
-					'description'      => $proLink,
+					'description'      => $pro_link,
 					'option_category'  => 'basic_option',
 					'options'          => array(
 						'off' => et_builder_i18n( 'No' ),
@@ -225,6 +233,9 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 					),
 					'default_on_front' => 'off',
 					'toggle_slug'      => 'main_content',
+					'condition'        => array(
+						'animate_on_scroll' => 'off',
+					),
 				),
 				'reverse'           => array(
 					'label'            => esc_html__( 'Reverse', 'am-lottieplayer' ),
@@ -237,6 +248,9 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 					),
 					'default_on_front' => 'off',
 					'toggle_slug'      => 'main_content',
+					'condition'        => array(
+						'animate_on_scroll' => 'off',
+					),
 				),
 				'subframe'          => array(
 					'label'            => esc_html__( 'Subframe', 'am-lottieplayer' ),
@@ -251,7 +265,7 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 					'toggle_slug'      => 'main_content',
 				),
 				'speed'             => array(
-					'label'          => __( 'Playback speed', 'am-lottieplayer' ),
+					'label'          => esc_html__( 'Playback speed', 'am-lottieplayer' ),
 					'type'           => 'range',
 					'default'        => '1',
 					'range_settings' => array(
@@ -259,9 +273,12 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 						'step' => '0.1',
 					),
 					'toggle_slug'    => 'main_content',
+					'condition'      => array(
+						'animate_on_scroll' => 'off',
+					),
 				),
 				'intermission'      => array(
-					'label'          => __( 'Intermission', 'am-lottieplayer' ),
+					'label'          => esc_html__( 'Intermission', 'am-lottieplayer' ),
 					'description'    => esc_html__( 'Pause between loops, in miliseconds. 1s = 1000', 'am-lottieplayer' ),
 					'type'           => 'range',
 					'range_settings' => array(
@@ -274,22 +291,22 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 					),
 				),
 				'segment_in'        => array(
-					'label'       => 'Pro Feature: ' . __( 'Choose where to start', 'am-lottieplayer' ),
-					'description' => $proLink,
+					'label'       => $pro_feature . esc_html__( 'Choose where to start', 'am-lottieplayer' ),
+					'description' => $pro_link,
 					'type'        => 'range',
 					'default'     => '1',
 					'toggle_slug' => 'main_content',
 				),
 				'segment_out'       => array(
-					'label'       => 'Pro Feature: ' . __( 'And where to end', 'am-lottieplayer' ),
-					'description' => $proLink,
+					'label'       => $pro_feature . esc_html__( 'And where to end', 'am-lottieplayer' ),
+					'description' => $pro_link,
 					'type'        => 'range',
 					'default'     => '',
 					'toggle_slug' => 'main_content',
 				),
 				'animate_on_scroll' => array(
-					'label'            => 'Pro Feature: ' . esc_html__( 'Animate on scroll', 'am-lottieplayer' ),
-					'description'      => $proLink,
+					'label'            => $pro_feature . esc_html__( 'Animate on scroll', 'am-lottieplayer' ),
+					'description'      => esc_html__( 'Make the animation play only when scrolling, relative to the speed and direction of the scroll', 'am-lottieplayer' ) . $pro_link,
 					'type'             => 'yes_no_button',
 					'option_category'  => 'basic_option',
 					'options'          => array(
@@ -300,7 +317,7 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 					'toggle_slug'      => 'main_content',
 				),
 				'onclick'           => array(
-					'label'            => __( 'Play on click', 'am-lottieplayer' ),
+					'label'            => esc_html__( 'Play on click', 'am-lottieplayer' ),
 					'type'             => 'yes_no_button',
 					'option_category'  => 'basic_option',
 					'options'          => array(
@@ -315,7 +332,7 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 					'toggle_slug'      => 'main_content',
 				),
 				'onmouseover'       => array(
-					'label'            => __( 'Play on mouseover', 'am-lottieplayer' ),
+					'label'            => esc_html__( 'Play on mouseover', 'am-lottieplayer' ),
 					'type'             => 'yes_no_button',
 					'option_category'  => 'basic_option',
 					'options'          => array(
@@ -331,13 +348,13 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 					'toggle_slug'      => 'main_content',
 				),
 				'onmouseout'        => array(
-					'label'       => __( 'On mouseout', 'am-lottieplayer' ),
+					'label'       => esc_html__( 'On mouseout', 'am-lottieplayer' ),
 					'type'        => 'select',
 					'options'     => array(
-						'void'    => __( 'No event', 'am-lottieplayer' ),
-						'stop'    => __( 'Stop', 'am-lottieplayer' ),
-						'pause'   => __( 'Pause', 'am-lottieplayer' ),
-						'reverse' => __( 'Reverse', 'am-lottieplayer' ),
+						'void'    => esc_html__( 'No event', 'am-lottieplayer' ),
+						'stop'    => esc_html__( 'Stop', 'am-lottieplayer' ),
+						'pause'   => esc_html__( 'Pause', 'am-lottieplayer' ),
+						'reverse' => esc_html__( 'Reverse', 'am-lottieplayer' ),
 					),
 					'default'     => 'stop',
 					'condition'   => array(
@@ -346,16 +363,16 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 					'toggle_slug' => 'main_content',
 				),
 				'selector'          => array(
-					'label'           => 'Pro Feature: ' . esc_html__( 'Trigger element', 'am-lottieplayer' ),
+					'label'           => $pro_feature . esc_html__( 'Trigger element', 'am-lottieplayer' ),
 					'type'            => 'text',
 					'option_category' => 'basic_option',
-					'description'     => $proLink,
+					'description'     => esc_html__( 'Anchor tag (id) for an element you want to trigger the animation, either by hover or click.', 'am-lottieplayer' ) . $pro_link,
 					'toggle_slug'     => 'main_content',
 				),
 				'exclude_selector'  => array(
-					'label'            => 'Pro Feature: ' . esc_html__( 'Apply interaction only to trigger element', 'am-lottieplayer' ),
+					'label'            => $pro_feature . esc_html__( 'Apply interaction only to trigger element', 'am-lottieplayer' ),
 					'type'             => 'yes_no_button',
-					'description'      => $proLink,
+					'description'      => $pro_link,
 					'option_category'  => 'basic_option',
 					'options'          => array(
 						'off' => et_builder_i18n( 'No' ),
@@ -421,8 +438,8 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 					'toggle_slug'     => 'main_content',
 				),
 				'renderer'          => array(
-					'label'           => 'Pro Feature: ' . esc_html__( 'Renderer', 'am-lottieplayer' ),
-					'description'     => $proLink,
+					'label'           => $pro_feature . esc_html__( 'Renderer', 'am-lottieplayer' ),
+					'description'     => esc_html__( 'Choose renderer', 'am-lottieplayer' ) . $pro_link,
 					'type'            => 'select',
 					'option_category' => 'configuration',
 					'options'         => array(
@@ -443,7 +460,7 @@ if ( \class_exists( '\ET_Builder_Module' ) ) {
 				$attrs,
 				$this->props,
 				array(
-					'animate_on_scroll' => false, // Pro feature
+					'animate_on_scroll' => $this->props['animate_on_scroll'] !== 'off',
 					'align'             => 'none', // TODO:
 					'autoplay'          => $this->props['autoplay'] !== 'off',
 					'background'        => 'transparent', // TODO:
